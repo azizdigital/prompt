@@ -429,11 +429,12 @@ const App = {
         }
     },
 
-    /**
+/**
      * Register service worker for PWA
      */
     registerServiceWorker() {
         if ('serviceWorker' in navigator) {
+            // Use relative path for GitHub Pages compatibility
             navigator.serviceWorker.register('./service-worker.js')
                 .then(registration => {
                     console.log('✅ Service Worker registered:', registration.scope);
@@ -443,7 +444,6 @@ const App = {
                         const newWorker = registration.installing;
                         newWorker.addEventListener('statechange', () => {
                             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                // New version available
                                 Utils.showToast('New version available! Refresh to update.', 'info', 5000);
                             }
                         });
