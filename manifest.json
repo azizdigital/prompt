@@ -2,7 +2,7 @@
   "name": "PromptForge OIM",
   "short_name": "PromptForge",
   "description": "AI Prompt Builder for Offshore Installation Managers",
-  "start_url": "/",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0A0E27",
   "theme_color": "#0A0E27",
