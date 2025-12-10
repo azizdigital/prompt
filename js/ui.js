@@ -11,8 +11,8 @@ const UI = {
         const mainContent = document.getElementById('mainContent');
         
         // Update header
-        document.getElementById('headerTitle').textContent = 'PromptForge OIM';
-        document.getElementById('headerSubtitle').textContent = 'AI Prompt Builder for Offshore Operations';
+        document.getElementById('headerTitle').textContent = 'Aziz Prompt Forge';
+        document.getElementById('headerSubtitle').textContent = 'Where Powerful Prompts Are Built';
         document.getElementById('backBtn').style.display = 'none';
         
         // Get favorites and usage stats
