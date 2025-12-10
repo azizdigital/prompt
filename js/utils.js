@@ -5,7 +5,7 @@
 
 const Utils = {
     /**
-     * Format date to readable string (DD/MM/YYYY)
+     * Format date to readable string
      */
     formatDate(date = new Date()) {
         const d = new Date(date);
@@ -80,63 +80,35 @@ const Utils = {
     },
 
     /**
-     * Replace template variables with proper conditional and loop support
+     * Replace template variables
      */
     replaceTemplateVars(template, data) {
         let result = template;
         
-        // STEP 1: Handle conditional blocks {if variable}...{endif}
-        result = result.replace(/\{if\s+(\w+)\}([\s\S]*?)\{endif\}/g, (match, condition, content) => {
-            // Show content only if variable exists and is not empty
-            const value = data[condition];
-            const isEmpty = !value || (typeof value === 'string' && value.trim() === '');
-            return isEmpty ? '' : content;
+        // Replace {variable} patterns
+        Object.keys(data).forEach(key => {
+            const regex = new RegExp(`\\{${key}\\}`, 'g');
+            result = result.replace(regex, data[key] || '');
         });
         
-        // STEP 2: Handle foreach loops {foreach array}...{end foreach}
-        result = result.replace(/\{foreach\s+(\w+)\}([\s\S]*?)\{end\s+foreach\}/g, (match, arrayName, loopTemplate) => {
-            if (!Array.isArray(data[arrayName]) || data[arrayName].length === 0) {
-                return '';
-            }
-            
+        // Handle conditional blocks {if condition}...{endif} - FIXED (removed colon)
+        result = result.replace(/\{if\s+(\w+)\}([\s\S]*?)\{endif\}/g, (match, condition, content) => {
+            return data[condition] ? content : '';
+        });
+        
+        // Handle foreach loops - FIXED (removed colon, added \s+)
+        result = result.replace(/\{foreach\s+(\w+)\}([\s\S]*?)\{end\s+foreach\}/g, (match, arrayName, template) => {
+            if (!Array.isArray(data[arrayName])) return '';
             return data[arrayName].map((item, index) => {
-                let itemResult = loopTemplate;
-                
-                // Replace {index} with 1-based index
+                let itemResult = template;
                 itemResult = itemResult.replace(/\{index\}/g, index + 1);
-                
-                // Replace item properties
-                if (typeof item === 'object' && item !== null) {
-                    Object.keys(item).forEach(key => {
-                        const regex = new RegExp(`\\{${key}\\}`, 'g');
-                        itemResult = itemResult.replace(regex, item[key] || '');
-                    });
-                } else {
-                    // If array of primitives (strings, numbers)
-                    itemResult = itemResult.replace(/\{item\}/g, item);
-                }
-                
+                Object.keys(item).forEach(key => {
+                    const regex = new RegExp(`\\{${key}\\}`, 'g');
+                    itemResult = itemResult.replace(regex, item[key] || '');
+                });
                 return itemResult;
             }).join('\n');
         });
-        
-        // STEP 3: Replace simple {variable} patterns
-        Object.keys(data).forEach(key => {
-            const regex = new RegExp(`\\{${key}\\}`, 'g');
-            const value = data[key];
-            
-            // Convert to string, handle null/undefined
-            let replacement = '';
-            if (value !== null && value !== undefined) {
-                replacement = value.toString();
-            }
-            
-            result = result.replace(regex, replacement);
-        });
-        
-        // STEP 4: Clean up any remaining unreplaced {variables}
-        // This removes {unknownVariable} that weren't in data
-        result = result.replace(/\{[\w]+\}/g, '');
         
         return result;
     },
@@ -145,7 +117,6 @@ const Utils = {
      * Truncate text with ellipsis
      */
     truncate(str, maxLength) {
-        if (!str) return '';
         if (str.length <= maxLength) return str;
         return str.substr(0, maxLength - 3) + '...';
     },
@@ -154,7 +125,7 @@ const Utils = {
      * Search/filter array of objects
      */
     searchObjects(objects, query, fields) {
-        if (!query || query.trim() === '') return objects;
+        if (!query) return objects;
         
         const lowerQuery = query.toLowerCase();
         return objects.filter(obj => {
@@ -191,34 +162,21 @@ const Utils = {
         if (!container) return;
         
         const toast = document.createElement('div');
-        toast.className = `toast toast-${type}`;
-        
-        // Icon based on type
-        let icon = '';
-        if (type === 'success') {
-            icon = '<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>';
-        } else if (type === 'error') {
-            icon = '<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>';
-        } else {
-            icon = '<path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>';
-        }
-        
+        toast.className = `toast ${type}`;
         toast.innerHTML = `
             <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-                ${icon}
+                ${type === 'success' ? '<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>' : ''}
+                ${type === 'error' ? '<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>' : ''}
+                ${type === 'info' ? '<path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>' : ''}
             </svg>
             <div class="toast-message">${this.escapeHTML(message)}</div>
         `;
         
         container.appendChild(toast);
         
-        // Trigger animation
-        setTimeout(() => toast.classList.add('toast-show'), 10);
-        
         // Auto remove
         setTimeout(() => {
-            toast.classList.remove('toast-show');
-            toast.classList.add('toast-hide');
+            toast.style.animation = 'slideOutRight 300ms ease-out';
             setTimeout(() => toast.remove(), 300);
         }, duration);
     },
@@ -253,12 +211,10 @@ const Utils = {
      * Get platform info for templates
      */
     getPlatformInfo() {
-        const settings = Storage.getSettings();
         return {
-            platform: settings.platform || 'IbA',
-            oimName: settings.oimName || 'Aziz Mohamad',
-            oimTitle: settings.oimTitle || 'OIM Irong Barat',
-            bossName: settings.bossName || 'FM Azri'
+            platform: Storage.getSetting('platform') || 'IbA',
+            oimName: Storage.getSetting('oimName') || 'Aziz Mohamad',
+            oimTitle: Storage.getSetting('oimTitle') || 'OIM Irong Barat'
         };
     }
 };
