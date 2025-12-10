@@ -1,5 +1,5 @@
 {
-  "name": "PromptForge OIM",
+  "name": "PromptForge OIM - AI Prompt Builder",
   "short_name": "PromptForge",
   "description": "AI Prompt Builder for Offshore Installation Managers",
   "start_url": "./",
@@ -21,5 +21,8 @@
       "type": "image/png",
       "purpose": "any maskable"
     }
-  ]
+  ],
+  "categories": ["productivity", "business", "utilities"],
+  "lang": "en-US",
+  "dir": "ltr"
 }
