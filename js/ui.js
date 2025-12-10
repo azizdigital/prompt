@@ -4,15 +4,19 @@
  */
 
 const UI = {
+    // Default header text
+    DEFAULT_TITLE: 'Aziz Prompt Forge',
+    DEFAULT_SUBTITLE: 'Where Powerful Prompts Are Built',
+    
     /**
      * Render home screen
      */
     renderHome() {
         const mainContent = document.getElementById('mainContent');
         
-        // Update header
-        document.getElementById('headerTitle').textContent = 'Aziz Prompt Forge';
-        document.getElementById('headerSubtitle').textContent = 'Where Powerful Prompts Are Built';
+        // Update header with defaults
+        document.getElementById('headerTitle').textContent = this.DEFAULT_TITLE;
+        document.getElementById('headerSubtitle').textContent = this.DEFAULT_SUBTITLE;
         document.getElementById('backBtn').style.display = 'none';
         
         // Get favorites and usage stats
