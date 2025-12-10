@@ -216,7 +216,7 @@ const UI = {
         const fieldId = `input-${input.name}-${index}`;
         let html = '<div class="form-group">';
         
-        // Label
+        // Label with proper 'for' attribute
         html += `<label for="${fieldId}" class="form-label">`;
         html += input.label;
         if (input.required) {
@@ -224,11 +224,12 @@ const UI = {
         }
         html += '</label>';
         
-        // Input based on type
+        // Render different input types
         switch (input.type) {
             case 'text':
             case 'email':
             case 'url':
+            case 'tel':
                 html += `<input 
                     type="${input.type}" 
                     id="${fieldId}"
@@ -236,6 +237,7 @@ const UI = {
                     class="form-input"
                     ${input.required ? 'required' : ''}
                     ${input.placeholder ? `placeholder="${input.placeholder}"` : ''}
+                    ${input.value ? `value="${input.value}"` : ''}
                     autocomplete="off"
                 >`;
                 break;
@@ -250,6 +252,8 @@ const UI = {
                     ${input.placeholder ? `placeholder="${input.placeholder}"` : ''}
                     ${input.min !== undefined ? `min="${input.min}"` : ''}
                     ${input.max !== undefined ? `max="${input.max}"` : ''}
+                    ${input.step !== undefined ? `step="${input.step}"` : ''}
+                    ${input.value ? `value="${input.value}"` : ''}
                     autocomplete="off"
                 >`;
                 break;
@@ -263,7 +267,7 @@ const UI = {
                     ${input.placeholder ? `placeholder="${input.placeholder}"` : ''}
                     rows="${input.rows || 4}"
                     autocomplete="off"
-                ></textarea>`;
+                >${input.value || ''}</textarea>`;
                 break;
                 
             case 'select':
@@ -282,7 +286,8 @@ const UI = {
                     input.options.forEach(option => {
                         const optValue = typeof option === 'string' ? option : option.value;
                         const optLabel = typeof option === 'string' ? option : option.label;
-                        html += `<option value="${optValue}">${optLabel}</option>`;
+                        const selected = input.value === optValue ? 'selected' : '';
+                        html += `<option value="${optValue}" ${selected}>${optLabel}</option>`;
                     });
                 }
                 
@@ -339,6 +344,11 @@ const UI = {
                 
             default:
                 html += `<input type="text" id="${fieldId}" name="${input.name}" class="form-input" ${input.required ? 'required' : ''} autocomplete="off">`;
+        }
+        
+        // Help text if provided
+        if (input.help) {
+            html += `<small class="form-help">${input.help}</small>`;
         }
         
         html += '</div>';
@@ -696,16 +706,51 @@ const UI = {
      * Handle global search
      */
     handleGlobalSearch(query) {
-        // Implementation for global search
-        console.log('Global search:', query);
+        if (!query || query.trim() === '') {
+            this.renderHome();
+            return;
+        }
+        
+        const allPrompts = PromptsData.prompts;
+        const results = Utils.searchObjects(allPrompts, query, ['title', 'description']);
+        
+        // Render search results (simplified)
+        const mainContent = document.getElementById('mainContent');
+        let html = '<div class="search-results">';
+        html += `<h2>Search Results for "${query}"</h2>`;
+        html += '<div class="prompts-list">';
+        
+        if (results.length > 0) {
+            results.forEach(prompt => {
+                html += this.renderPromptItem(prompt, Storage.isFavorite(prompt.id));
+            });
+        } else {
+            html += '<p>No prompts found.</p>';
+        }
+        
+        html += '</div></div>';
+        mainContent.innerHTML = html;
+        
+        this.attachHomeEventListeners();
     },
 
     /**
      * Handle category search
      */
     handleCategorySearch(categoryId, query) {
-        // Implementation for category search
-        console.log('Category search:', categoryId, query);
+        const prompts = PromptsData.getPromptsByCategory(categoryId);
+        const results = query ? Utils.searchObjects(prompts, query, ['title', 'description']) : prompts;
+        
+        const list = document.getElementById('categoryPromptsList');
+        if (!list) return;
+        
+        list.innerHTML = '';
+        results.forEach(prompt => {
+            list.innerHTML += this.renderPromptItem(prompt, Storage.isFavorite(prompt.id));
+        });
+        
+        // Reattach event listeners for new items
+        this.attachCategoryEventListeners(categoryId);
     }
 };
 
